@@ -2,11 +2,12 @@ package mart
 
 import "sync"
 
+// A searchReq represents an search event with specific keyword.
 type searchReq struct {
 	key  string
 	put  chan []Product
 	err  chan error
-	done chan bool
+	done chan string
 	mart *Mart
 	wg   sync.WaitGroup
 }
@@ -21,6 +22,8 @@ func (s *searchReq) next(fn func()) {
 	}
 }
 
+// seek parses the Products in given page index and sends to s.put.
+// If error occurred, it will send error to s.err.
 func (s *searchReq) seek(page int) {
 	s.wg.Add(1)
 	defer s.wg.Done()
@@ -28,7 +31,7 @@ func (s *searchReq) seek(page int) {
 	// we check the channel at the beginning to avoid making request
 	// after it's cancelled
 	s.next(func() {
-		p, m, err := s.mart.d.Seek(s.key, page)
+		p, m, err := s.mart.c.Seek(s.key, page)
 		if err != nil {
 			s.next(func() { s.err <- err })
 			return
@@ -43,28 +46,27 @@ func (s *searchReq) seek(page int) {
 
 				// once all seek goroutines are finished, notifies the caller
 				s.wg.Wait()
-				s.next(func() { s.done <- true })
+				s.next(func() { s.done <- s.mart.Name() })
 			}()
 		}
 
-		s.next(func() { s.put <- ps })
+		s.next(func() { s.put <- p })
 	})
 }
 
-// Search returns a channel of Products which name match given key
-// and a channel of error. It is the caller's responsibility to
-// decide whether to keep going if an error is received. Closing the
-// done notifies the Mart to stop searching. If no more Product left,
-// it will send true to done.
-func (m *Mart) Search(key string, done chan bool) (chan []Product, chan error) {
+// Search sends the slices of Product which name match the given key
+// to cp. If an error occurred, it sends the error to ce. It is the
+// caller's responsibility to decide whether to continue if an error
+// is received. Closing done notifies the Mart to stop searching.
+// Once the job is finished, it sends m.Name() to done.
+func (m *Mart) Search(key string, done chan string, cp chan []Product, ce chan error) {
 	s := &searchReq{
 		key:  key,
-		put:  make(chan []Product),
-		err:  make(chan error),
+		put:  cp,
+		err:  ce,
 		done: done,
 		mart: m,
 	}
 
-	go s.search(1, done)
-	return s.put, s.err
+	go s.seek(1)
 }

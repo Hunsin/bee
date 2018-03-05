@@ -6,11 +6,16 @@ import (
 )
 
 var (
-	pool = make(map[string]Driver)
+	pool = make(map[string]Client)
 	pmu  sync.Mutex
 )
 
-type Driver interface {
+// A Client is an adapter of a specific online shop.
+type Client interface {
+
+	// Seek returns the slice of Products which name match given key
+	// in certain number of page. The returned integer is the number
+	// of pages in total.
 	Seek(string, int) ([]Product, int, error)
 }
 
@@ -25,35 +30,38 @@ type Product struct {
 
 // A Mart is a crawler of a online shop like RT-Mart or Carrefour.
 type Mart struct {
-	d Driver // mart driver
+	c Client // mart client
 	n string // mart name
 }
 
 // Name returns the name of the store.
-func (m *mart) Name() string {
+func (m *Mart) Name() string {
 	return m.n
 }
 
-func Register(name string, d Driver) {
+// Register makes a client available by the provided name. If c is nil
+// or Register is called twice with the same name, it panics.
+func Register(name string, c Client) {
 	pmu.Lock()
 	defer pmu.Unlock()
 
-	if d == nil {
-		panic("mart: A nil Driver is registered")
+	if c == nil {
+		panic("mart: A nil Client is registered")
 	}
 
 	if _, ok := pool[name]; ok {
-		panic("mart: Multiple Drivers registered under name " + name)
+		panic("mart: Multiple Clients registered under name " + name)
 	}
 
-	pool[name] = d
+	pool[name] = c
 }
 
+// Open returns a pointer to Mart with named Client.
 func Open(name string) (*Mart, error) {
-	d, ok := pool[name]
+	c, ok := pool[name]
 	if !ok {
-		return nil, errors.New("Driver " + name + " not found")
+		return nil, errors.New("Client " + name + " not found")
 	}
 
-	return d, nil
+	return &Mart{c, name}, nil
 }
