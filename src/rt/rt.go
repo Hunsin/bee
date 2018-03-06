@@ -1,25 +1,24 @@
-package carrefour
+package rt
 
 import "mart"
 
-const baseURL = "https://online.carrefour.com.tw"
+const baseURL = "http://www.rt-mart.com.tw/direct/index.php"
 
-// A client implements the mart.Mart interface.
+// A client implements the mart.Client interface.
 type client struct{}
 
 func (c *client) ID() string {
-	return "carrefour"
+	return "rt"
 }
 
 func (c *client) Name() string {
-	return "Carrefour (TW)"
+	return "RT-Mart"
 }
 
 func (c *client) Currency() string {
 	return "TWD"
 }
 
-// init registers a client to package mart.
 func init() {
 	c := &client{}
 	mart.Register(c.ID(), c)

@@ -41,7 +41,7 @@ type searchJSON struct {
 func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error) {
 	form := url.Values{
 		"key":       []string{key},
-		"orderBy":   []string{"10"},
+		"orderBy":   []string{"10"}, // by price
 		"pageIndex": []string{strconv.Itoa(page)},
 		"pageSize":  []string{strconv.Itoa(searchSize)},
 	}
@@ -56,7 +56,7 @@ func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error)
 	defer r.Body.Close()
 
 	if r.StatusCode != http.StatusOK {
-		return nil, 0, fmt.Errorf("carrefour: Search key %s with status %s returned.", key, r.Status)
+		return nil, 0, fmt.Errorf("carrefour: search key %s with status %s returned", key, r.Status)
 	}
 
 	out := searchJSON{}
@@ -71,7 +71,7 @@ func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error)
 			Name:  s.Name,
 			Image: s.Image,
 			Page:  baseURL + strings.Split(s.Page, "?")[0],
-			Mart:  pkgName,
+			Mart:  c.ID(),
 		}
 
 		if s.Special != "" && s.Special != "0" {
