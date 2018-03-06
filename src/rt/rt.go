@@ -16,7 +16,7 @@ func (c *client) Name() string {
 }
 
 func (c *client) Currency() string {
-	return "TWD"
+	return mart.CurrencyTWD
 }
 
 func init() {

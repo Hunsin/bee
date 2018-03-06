@@ -1,39 +1,64 @@
 package mart
 
-import "sync"
+import (
+	"context"
+	"sync"
+)
 
-// A searchReq represents an search event with specific keyword.
-type searchReq struct {
-	key  string
+const (
+	ByPrice = iota
+	ByPopular
+)
+
+// A Query is a search request with specific keyword, how to sort
+// the result and what to do after the job is done.
+type Query struct {
+	Key string
+
+	// Order is either ByPopular or ByPrice.
+	Order int
+
+	// Done is called once the search job is finished.
+	// It won't be executed if the job is cancelled.
+	Done func()
+}
+
+type query struct {
+	ctx  context.Context
+	opt  Query
 	put  chan []Product
 	err  chan error
-	done chan string
 	mart *Mart
 	wg   sync.WaitGroup
 }
 
 // next checks if request had been cancelled, else calls fn.
-func (s *searchReq) next(fn func()) {
+func (q *query) next(fn func()) {
 	select {
-	case <-s.done:
+	case <-q.ctx.Done():
 		return
 	default:
 		fn()
 	}
 }
 
-// seek parses the Products in given page index and sends to s.put.
-// If error occurred, it will send error to s.err.
-func (s *searchReq) seek(page int) {
-	s.wg.Add(1)
-	defer s.wg.Done()
+// seek is the shorthand of q.mart.c.Seek(q.opt.Key, q.opt.Order, page)
+func (q *query) seek(page int) ([]Product, int, error) {
+	return q.mart.c.Seek(q.opt.Key, q.opt.Order, page)
+}
+
+// search parses the Products in given page index and sends to q.put.
+// If error occurred, it will send error to q.err.
+func (q *query) search(page int) {
+	q.wg.Add(1)
+	defer q.wg.Done()
 
 	// we check the channel at the beginning to avoid making request
 	// after it's cancelled
-	s.next(func() {
-		p, m, err := s.mart.c.Seek(s.key, page)
+	q.next(func() {
+		p, m, err := q.seek(page)
 		if err != nil {
-			s.next(func() { s.err <- err })
+			q.next(func() { q.err <- err })
 			return
 		}
 
@@ -41,32 +66,32 @@ func (s *searchReq) seek(page int) {
 		if page == 1 {
 			go func() {
 				for i := 2; i <= m; i++ {
-					s.seek(i)
+					q.search(i)
 				}
 
-				// once all seek goroutines are finished, notifies the caller
-				s.wg.Wait()
-				s.next(func() { s.done <- s.mart.Name() })
+				// once all seek goroutines are finished, run callback
+				q.wg.Wait()
+				if q.opt.Done != nil {
+					q.next(q.opt.Done)
+				}
 			}()
 		}
 
-		s.next(func() { s.put <- p })
+		q.next(func() { q.put <- p })
 	})
 }
 
-// Search sends the slices of Product which name match the given key
-// to cp. If an error occurred, it sends the error to ce. It is the
-// caller's responsibility to decide whether to continue if an error
-// is received. Closing done notifies the Mart to stop searching.
-// Once the job is finished, it sends m.Name() to done.
-func (m *Mart) Search(key string, done chan string, cp chan []Product, ce chan error) {
-	s := &searchReq{
-		key:  key,
+// Search sends the slices of Product which match the given query to cp.
+// If an error occurred, it sends the error to ce. It is the caller's
+// responsibility to decide whether to cancel if an error is received.
+func (m *Mart) Search(ctx context.Context, q Query, cp chan []Product, ce chan error) {
+	qry := &query{
+		ctx:  ctx,
+		opt:  q,
 		put:  cp,
 		err:  ce,
-		done: done,
 		mart: m,
 	}
 
-	go s.seek(1)
+	go qry.search(1)
 }

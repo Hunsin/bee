@@ -19,7 +19,7 @@ const (
 
 	// product page, image & name
 	tmplInfo = "<a href=\"(.*)\">\n *<img src=\"(.*)\" alt=\"(.*)\" class=\"item-image\">"
-	
+
 	// product price
 	tmplPrice = `<span class="item-price ">([0-9]*)</span>`
 
@@ -28,9 +28,9 @@ const (
 )
 
 var (
-	regInfo = regexp.MustCompile(tmplInfo)
+	regInfo  = regexp.MustCompile(tmplInfo)
 	regPrice = regexp.MustCompile(tmplPrice)
-	regNum = regexp.MustCompile(tmplNum)
+	regNum   = regexp.MustCompile(tmplNum)
 )
 
 func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error) {
@@ -66,7 +66,7 @@ func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error)
 		pg, _ = strconv.Atoi(string(n[1]))
 		pg = (pg + searchSize - 1) / searchSize
 	}
-	
+
 	// devide html into small parts and extract the product info
 	var ps []mart.Product
 	frags := bytes.Split(o, []byte(`<figure class="item-image-container">`))[1:]
@@ -80,7 +80,7 @@ func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error)
 				Name:  string(inf[3]),
 				Image: baseURL + string(inf[2]),
 				Page:  baseURL + string(inf[1]),
-				Mart:  pkgName,
+				Mart:  c.ID(),
 			}
 			p.Price, _ = strconv.Atoi(string(pce[1]))
 			ps = append(ps, p)

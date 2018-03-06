@@ -68,10 +68,10 @@ func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error)
 			p := mart.Product{
 				Name:  string(b[3]),
 				Image: string(b[2]),
-				Price: string(b[4]),
+				Page:  string(b[1]),
 				Mart:  c.ID(),
 			}
-			p.Price, _ = strconv.Atoi(string(b[1]))
+			p.Price, _ = strconv.Atoi(string(b[4]))
 			ps = append(ps, p)
 		}
 	}
