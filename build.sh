@@ -55,5 +55,6 @@ EOF
 case $1 in
 	app) app;;
 	env) env;;
+	all) all;;
 	*)   help;;
 esac
