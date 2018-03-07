@@ -38,7 +38,7 @@ type searchJSON struct {
 	Content searchContent `json:"content"`
 }
 
-func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error) {
+func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product, int, error) {
 	form := url.Values{
 		"key":       []string{key},
 		"orderBy":   []string{"10"}, // by price

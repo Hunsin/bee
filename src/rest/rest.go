@@ -87,7 +87,7 @@ func search(w http.ResponseWriter, r *http.Request) {
 	d := make(chan bool)
 	q := mart.Query{
 		Key:   key,
-		Order: odr,
+		Order: mart.SearchOrder(odr),
 		Done:  func() { d <- true },
 	}
 

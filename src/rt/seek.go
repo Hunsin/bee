@@ -25,7 +25,7 @@ var (
 	numSeek = 1 << 6
 )
 
-func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error) {
+func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product, int, error) {
 	form := url.Values{
 		"action":       []string{"product_search"},
 		"prod_keyword": []string{key},

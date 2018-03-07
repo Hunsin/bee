@@ -32,16 +32,16 @@ type Client interface {
 	// in certain number of page. The third argument determines how
 	// products are sorted, either ByPopular or ByPrice. The returned
 	// integer is the number of pages in total.
-	Seek(string, int, int) ([]Product, int, error)
+	Seek(string, int, SearchOrder) ([]Product, int, error)
 }
 
 // A Product represents an item which is sold on a Mart.
 type Product struct {
-	Name  string `json:"name"`// Product Name
-	Image string `json:"image"`// URL to the Product Image
-	Page  string `json:"page"`// URL of the Product page
-	Price int    `json:"price"`// you know, just price
-	Mart  string `json:"mart"`// The mart the product belongs to
+	Name  string `json:"name"`  // Product Name
+	Image string `json:"image"` // URL to the Product Image
+	Page  string `json:"page"`  // URL of the Product page
+	Price int    `json:"price"` // you know, just price
+	Mart  string `json:"mart"`  // The mart the product belongs to
 }
 
 // A MartInfo specifies the information of a Mart

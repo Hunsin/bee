@@ -5,8 +5,11 @@ import (
 	"sync"
 )
 
+// A SearchOrder defines how data is sorted.
+type SearchOrder int
+
 const (
-	ByPrice = iota
+	ByPrice SearchOrder = iota
 	ByPopular
 )
 
@@ -16,7 +19,7 @@ type Query struct {
 	Key string
 
 	// Order is either ByPopular or ByPrice.
-	Order int
+	Order SearchOrder
 
 	// Done is called once the search job is finished.
 	// It won't be executed if the job is cancelled.
@@ -44,7 +47,7 @@ func (q *query) next(fn func()) {
 
 // seek is the shorthand of q.mart.c.Seek(q.opt.Key, q.opt.Order, page)
 func (q *query) seek(page int) ([]Product, int, error) {
-	return q.mart.c.Seek(q.opt.Key, q.opt.Order, page)
+	return q.mart.c.Seek(q.opt.Key, page, q.opt.Order)
 }
 
 // search parses the Products in given page index and sends to q.put.

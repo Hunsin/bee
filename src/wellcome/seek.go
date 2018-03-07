@@ -33,7 +33,7 @@ var (
 	regNum   = regexp.MustCompile(tmplNum)
 )
 
-func (c *client) Seek(key string, page int, by int) ([]mart.Product, int, error) {
+func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product, int, error) {
 	form := url.Values{
 		"skeyword":  []string{key},
 		"sortValue": []string{"3"},
