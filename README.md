@@ -9,7 +9,7 @@ $ cd ./bee
 ```
 2. Build it
 ```sh
-$ ./build.sh app
+$ ./build.sh all
 ```
 3. Done! Do you need more information?
 ```sh
