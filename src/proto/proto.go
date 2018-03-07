@@ -5,6 +5,7 @@ import (
 	"mart"
 	"net"
 	"proto/pb"
+	"strconv"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -20,6 +21,7 @@ func noFound(msg string) error {
 // A gRPCsrv implements the pb.CrawlerServer interface.
 type gRPCsrv struct{}
 
+// Search streams the products which match q to client.
 func (s *gRPCsrv) Search(q *pb.Query, stream pb.Crawler_SearchServer) error {
 
 	// create query
@@ -94,6 +96,7 @@ func (s *gRPCsrv) Search(q *pb.Query, stream pb.Crawler_SearchServer) error {
 	}
 }
 
+// Marts responses with the client a list of marts available.
 func (s *gRPCsrv) Marts(_ context.Context, _ *pb.Null) (*pb.MartList, error) {
 	l := &pb.MartList{}
 	for _, m := range mart.All() {
@@ -112,8 +115,8 @@ func (s *gRPCsrv) Marts(_ context.Context, _ *pb.Null) (*pb.MartList, error) {
 }
 
 // Serve creates a gRPC server which listens to given port.
-func Serve(port string) error {
-	l, err := net.Listen("tcp", port)
+func Serve(port int) error {
+	l, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
 		return err
 	}

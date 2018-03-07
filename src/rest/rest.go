@@ -24,6 +24,7 @@ func writeError(w http.ResponseWriter, code int, msg string) {
 	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
 
+// marts responses with the client a list of marts available
 func marts(w http.ResponseWriter, _ *http.Request) {
 	var ms []mart.MartInfo
 	for _, m := range mart.All() {
@@ -38,6 +39,13 @@ func marts(w http.ResponseWriter, _ *http.Request) {
 	json.NewEncoder(w).Encode(ms)
 }
 
+// search responses with the client a list of products which match
+// given request.
+// Form fields:
+//   key   - required; response with 400 if empty
+//   num   - optional
+//   order - optional
+//   mart  - optional
 func search(w http.ResponseWriter, r *http.Request) {
 
 	// parse key, num & order
@@ -46,10 +54,14 @@ func search(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "key must not be empty")
 		return
 	}
-	num, err := strconv.Atoi(r.FormValue("num"))
-	if err != nil {
-		writeError(w, http.StatusBadRequest, "num must be numbers")
-		return
+
+	var num int
+	var err error
+	if n := r.FormValue("num"); n != "" {
+		if num, err = strconv.Atoi(n); err != nil {
+			writeError(w, http.StatusBadRequest, "num must be integers")
+			return
+		}
 	}
 	odr, _ := strconv.Atoi(r.FormValue("order"))
 
@@ -62,7 +74,8 @@ func search(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ms = append(ms, m)
-	} else {
+
+	} else { // else open all
 		ms = mart.All()
 		if len(ms) == 0 {
 			writeError(w, http.StatusNotFound, "no mart available")
@@ -87,13 +100,14 @@ func search(w http.ResponseWriter, r *http.Request) {
 		ms[i].Search(ctx, q, put, che)
 	}
 
+	// receive the data
 	var done int
 	var p []mart.Product
 	for {
 		select {
 		case ps := <-put:
 			p = append(p, ps...)
-			if num > 0 && len(p) > num {
+			if num > 0 && len(p) > num { // reach the request limit
 				quit()
 				p = p[:num]
 				w.WriteHeader(http.StatusOK)
@@ -114,8 +128,9 @@ func search(w http.ResponseWriter, r *http.Request) {
 }
 
 // Serve creates a RESTful server which listens to given port.
-func Serve(port string) error {
+func Serve(port int) error {
 	http.HandleFunc("/marts", marts)
 	http.HandleFunc("/search", search)
-	return http.ListenAndServe(port, nil)
+
+	return http.ListenAndServe(":"+strconv.Itoa(port), nil)
 }
