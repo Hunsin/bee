@@ -8,6 +8,7 @@
 | mart  | string | "carrefour"    | If null, search all                      |
 | num   | int    | 20             | If null, search all                      |
 | order | int    | 0, 1           | 0: by price; default<br>1: by popularity | 
+> Note: ONLY "carrefour", "rt", "wellcome" available in `mart` field
 
 ### Response (application/json; array of objects)
 | field | type   | possible value | note                     |

@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/bash
 BUILD_PATH=$(cd $(dirname $0); pwd)
 DIST_PATH=$BUILD_PATH/dist
 GIT_DATE=$(git log -1 --format=%cd)
@@ -11,52 +11,49 @@ export PATH=$PATH:$GOPATH/bin
 
 # env installs necessary packages
 function env(){
-  # not sure if needs
-	# go get -u github.com/Hunsin/beaver
-	
+
+	# install packages
+	echo "Start installing golang packages..."
   go get -u github.com/golang/protobuf/protoc-gen-go
 	go get -u google.golang.org/grpc
 
+	# download gRPC compiler
+	echo "Start downloading protobuf compiler..."
 	mkdir $BUILD_PATH/protoc
 	wget $PROTOC_URL -O $BUILD_PATH/protoc/$PROTOC_ZIP
 	unzip $BUILD_PATH/protoc/$PROTOC_ZIP -d $BUILD_PATH/protoc
+
+	# make directory where files are output
+	mkdir $BUILD_PATH/src/proto/pb
 }
 
-# app builds the crawler which provides gRPC APIs for clients
-# to scrape data from online shop
+# app builds the crawler which provides RESTful and gRPC APIs for
+# clients to scrape data from online shop
 function app(){
-	env
 	cd $BUILD_PATH
-	mkdir $BUILD_PATH/src/proto/pb
 	protoc/bin/protoc -I doc/ doc/APIs_client.proto --go_out=plugins=grpc:src/proto/pb
 
-	go build -o $DIST_PATH/crawler -ldflags="-X 'main.Version=$GIT_DATE'" $BUILD_PATH/app/crawler.go
-	echo "Binary file saved as: $DIST_PATH/crawler"
+	go build -o $DIST_PATH/app -ldflags="-X 'main.Version=$GIT_DATE'" main
+	echo "Binary file saved as: $DIST_PATH/app"
 }
 
-# web builds the web server which provides RESTful APIs
-# and simple front-end page
-function web(){
+# all calls env() and app()
+function all(){
 	env
-  cd $BUILD_PATH
-	
-	go build -o $DIST_PATH/web -ldflags="-X 'main.Version=$GIT_DATE'" $BUILD_PATH/app/web.go
-	echo "Binary file saved as: $DIST_PATH/web"
+	app
 }
 
 function help(){
 cat <<EOF
 Usage:
-$ ./build.sh app: Build crawler server.
+$ ./build.sh app: Build application.
 $ ./build.sh env: Install necessary packages.
-$ ./build.sh web: Build web server.
+$ ./build.sh all: Execute "./build.sh env" and "./build.sh app".
 EOF
 }
-
 
 case $1 in
 	app) app;;
 	env) env;;
-	web) web;;
 	*)   help;;
 esac
