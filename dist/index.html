@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Mart Search</title>
+</head>
+<body>
+
+  <!-- search form -->
+  <form onsubmit="event.preventDefault(); search(this);">
+    <input name="key" type="text" required>
+    <input type="submit" value="Search">
+    <br>
+    <input type="radio" name="order" value="0" checked>By Price
+    <input type="radio" name="order" value="1">By Popularity
+  </form>
+
+  <!-- display board -->
+  <div id="fading">
+    <div class="dot"></div>
+    <div class="dot" style="animation-delay: 0.5s;"></div>
+    <div class="dot" style="animation-delay: 1s;"></div>
+  </div>
+  <div id="board"></div>
+  
+  <!-- style sheet -->
+  <style>
+    @keyframes fading {
+      0%   {opacity: 0.2;}
+      33%  {opacity: 1;}
+      50%  {opacity: 0.2;}
+      100% {opacity: 0.2;}
+    }
+
+    form, #board a div {
+      text-align: center;
+    }
+
+    .dot {
+      margin: 0.4em;
+      width: 1em;
+      height: 1em;
+      background-color: grey;
+      border-radius: 0.5em;
+      opacity: 0;
+      animation-name: fading;
+      animation-duration: 1.5s;
+      animation-iteration-count: infinite;
+    }
+
+    #fading {
+      display: none; /* default */
+      width: 100%;
+      height: 20em;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #board {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    #board a {
+      display: block;
+      margin: 0.4em;
+      padding: 0.4em;
+      width: 12em;
+    }
+
+    #board a:hover {
+      box-shadow: 0px 2px 8px #888;
+    }
+
+    #board a img {
+      width: 100%;
+    }
+  </style>
+
+  <script>
+    function search(f) {
+
+      // remove old data
+      let board = document.getElementById("board");
+      while(board.firstChild) board.removeChild(board.firstChild);
+      
+      // display animation
+      document.getElementById("fading").style.display = "flex";
+
+      // send request
+      let data = new FormData(f);
+      fetch("/search", {method: "POST", body: data})
+      .then(res => res.json())
+      .catch(err => console.log(err))
+      .then(arr => {
+
+        // remove animation
+        document.getElementById("fading").style.display = "none";
+
+        // sort if order by price
+        if (data.get("order") == "0") {
+          arr.sort((a, b) => a.price - b.price);
+        }
+        
+        // create item thumbnail
+        for (let i = 0; i < arr.length; i++) {
+          let box = document.createElement("a"),
+              img = document.createElement("img"),
+              pro = document.createElement("div"),
+              pce = document.createElement("div"),
+              frm = document.createElement("div");
+
+          box.href      = arr[i].page;
+          img.src       = arr[i].image;
+          pro.innerText = arr[i].name;
+          pce.innerText = arr[i].price;
+          frm.innerText = arr[i].mart;
+
+          box.appendChild(img);
+          box.appendChild(pro);
+          box.appendChild(pce);
+          box.appendChild(frm);
+
+          board.appendChild(box);
+        }
+      });
+    }
+  </script>
+</body>
+</html>

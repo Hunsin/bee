@@ -23,11 +23,12 @@ Once you build it, the app is under `./dist` directory.
 # Example:  
 # Serve RESTful at 8888 port (default 8203)
 # Serve gRPC    at 8889 port (default 8202)
-$ ./dist/app -p 8888 -g 8889
+$ cd ./dist/
+$ ./app -p 8888 -g 8889
 
 # Example:
 # Read version and exit
-$ ./dist/app -v
+$ ./app -v
 ```
 
 ## APIs

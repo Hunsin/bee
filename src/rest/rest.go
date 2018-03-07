@@ -131,6 +131,9 @@ func search(w http.ResponseWriter, r *http.Request) {
 func Serve(port int) error {
 	http.HandleFunc("/marts", marts)
 	http.HandleFunc("/search", search)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "index.html")
+	})
 
 	return http.ListenAndServe(":"+strconv.Itoa(port), nil)
 }
