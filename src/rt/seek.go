@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	tmplPro = `<a href="(.+)" target="_blank"><img src="(.+)"[ [a-z]+="[0-9]+"]{3} title="(.+)" alt=".+" ?/></a>`
+	tmplPro = `<a href="(.+)" target="_blank"><img src="(.+)" width="[0-9]+" (?:[a-z]+=".+" )+alt="(.+)" ?/>.+<div class="for_pricebox"><div ?><span>\$</span>([0-9]+)</div>`
 )
 
 var (
