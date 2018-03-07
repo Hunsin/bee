@@ -5,15 +5,14 @@ import (
 	"testing"
 )
 
+const (
+	regPage  = "https://online.carrefour.com.tw/[0-9]+"
+	regImage = "https://carrefoureccdn.azureedge.net/content/images/thumbs/.+.jpeg"
+)
+
 func TestSeek(t *testing.T) {
-	c := &client{}
-	ps, pages, err := c.Seek("抽取衛生紙", 1, mart.ByPrice)
+	err := mart.ValidSeek(regPage, regImage, &client{})
 	if err != nil {
 		t.Error("client.Seek failed:", err)
-	}
-
-	t.Log(pages)
-	for i := range ps {
-		t.Log(ps[i])
 	}
 }

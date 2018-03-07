@@ -14,8 +14,8 @@ import (
 const (
 	searchURL = baseURL + "/product/listByKeyword"
 
-	// default numers of item per search
-	searchSize = 1 << 6
+	// max numer of items per search
+	searchSize = 100
 
 	// product page, image & name
 	tmplInfo = "<a href=\"(.*)\">\n *<img src=\"(.*)\" alt=\"(.*)\" class=\"item-image\">"

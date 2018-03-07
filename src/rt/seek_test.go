@@ -5,15 +5,14 @@ import (
 	"testing"
 )
 
+const (
+	regPage  = "http://www.rt-mart.com.tw/direct/index.php.action=product_detail&prod_no=[A-Z0-9]+"
+	regImage = "http://www.rt-mart.com.tw/website/uploads_product/website_[0-9]/.+.jpg"
+)
+
 func TestSeek(t *testing.T) {
-	c := &client{}
-	ps, pages, err := c.Seek("抽取衛生紙", 1, mart.ByPopular)
+	err := mart.ValidSeek(regPage, regImage, &client{})
 	if err != nil {
 		t.Error("client.Seek failed:", err)
-	}
-
-	t.Log(pages)
-	for i := range ps {
-		t.Log(ps[i])
 	}
 }

@@ -1,4 +1,6 @@
 #!/bin/bash
+set -e
+
 BUILD_PATH=$(cd $(dirname $0); pwd)
 DIST_PATH=$BUILD_PATH/dist
 GIT_DATE=$(git log -1 --format=%cd)
