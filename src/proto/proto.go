@@ -13,7 +13,12 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// noFound returns an status error with code NotFound.
+// badRequest returns an status error with codes.InvalidArgument.
+func badRequest(msg string) error {
+	return status.Error(codes.InvalidArgument, msg)
+}
+
+// noFound returns an status error with codes.NotFound.
 func noFound(msg string) error {
 	return status.Error(codes.NotFound, msg)
 }
@@ -23,6 +28,9 @@ type gRPCsrv struct{}
 
 // Search streams the products which match q to client.
 func (s *gRPCsrv) Search(q *pb.Query, stream pb.Crawler_SearchServer) error {
+	if q.Key == "" {
+		return badRequest("Key must not be empty")
+	}
 
 	// create query
 	d := make(chan bool)
@@ -66,6 +74,7 @@ func (s *gRPCsrv) Search(q *pb.Query, stream pb.Crawler_SearchServer) error {
 	for {
 		select {
 		case <-ctx.Done():
+			log.Println("Search keyword", q.Key, "cancelled")
 			return nil
 		case ps := <-put:
 			for i := range ps {
