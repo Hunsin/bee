@@ -37,5 +37,5 @@ The API documents are under `./doc` directory.
 ```sh
 # Run client app, dials to URL "localhost:8888"
 $ export GOPATH=`pwd`
-$ go run dist/client.go -u localhost:8888
+$ go run dist/client.go -u localhost:8889
 ```
