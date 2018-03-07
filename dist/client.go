@@ -30,6 +30,9 @@ func send(c pb.CrawlerClient) {
 				break
 			}
 		}
+		if args[0] == "\\q" { // quit
+			os.Exit(0)
+		}
 
 		r, err := c.Search(context.Background(), &pb.Query{
 			Key: args[0],
@@ -78,5 +81,6 @@ func main() {
 	fmt.Println("gRPC server:", *url, "connected")
 	fmt.Println("Usage:   keyword    max(optional)")
 	fmt.Println("Example: 抽取衛生紙 30")
+	fmt.Println("To exit: \\q")
 	send(client)
 }
