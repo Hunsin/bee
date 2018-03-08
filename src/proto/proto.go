@@ -1,3 +1,5 @@
+// Package proto is a controller which provides service through
+// gRPC APIs.
 package proto
 
 import (

@@ -9,7 +9,10 @@ import (
 type SearchOrder int
 
 const (
+	// ByPrice indicates that data should sorts by price, ascending.
 	ByPrice SearchOrder = iota
+
+	// ByPopular indicates that data should sorts by popularity, descending.
 	ByPopular
 )
 

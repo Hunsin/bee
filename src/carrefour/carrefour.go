@@ -1,3 +1,5 @@
+// Package carrefour is an adapter between Taiwanese Carrefour online
+// store and package mart.
 package carrefour
 
 import "mart"

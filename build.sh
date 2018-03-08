@@ -16,6 +16,7 @@ function env(){
 
 	# install packages
 	echo "Start installing golang packages..."
+	echo "It take some time, please wait..."
   go get -u github.com/golang/protobuf/protoc-gen-go
 	go get -u google.golang.org/grpc
 
@@ -30,7 +31,7 @@ function env(){
 }
 
 # app builds the crawler which provides RESTful and gRPC APIs for
-# clients to scrape data from online shop
+# clients to scrape data from online store
 function app(){
 	cd $BUILD_PATH
 	protoc/bin/protoc -I doc/ doc/APIs_client.proto --go_out=plugins=grpc:src/proto/pb

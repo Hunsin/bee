@@ -1,3 +1,6 @@
+// Package mart is the core part of the model. It extracts products
+// information from online store through a registered adapter.
+// The package must be used in conjunction with adapters.
 package mart
 
 import (
@@ -5,8 +8,8 @@ import (
 	"sync"
 )
 
+// Currencies
 const (
-	// Currencies
 	CurrencyTWD = "TWD"
 	CurrencyUSE = "USD"
 )
@@ -16,7 +19,7 @@ var (
 	pmu  sync.Mutex
 )
 
-// A Client is an adapter of a specific online shop.
+// A Client is an adapter of a specific online store.
 type Client interface {
 
 	// Currency returns the currency the Mart is use.
@@ -44,21 +47,21 @@ type Product struct {
 	Mart  string `json:"mart"`  // The mart the product belongs to
 }
 
-// A MartInfo specifies the information of a Mart
-type MartInfo struct {
+// A Info specifies the information of a Mart
+type Info struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Currency string `json:"cur"`
 }
 
-// A Mart is a crawler of a online shop like RT-Mart or Carrefour.
+// A Mart is a crawler of a online store like RT-Mart or Carrefour.
 type Mart struct {
 	c Client // mart client
 }
 
 // Info returns the information of the store.
-func (m *Mart) Info() MartInfo {
-	return MartInfo{
+func (m *Mart) Info() Info {
+	return Info{
 		m.c.ID(),
 		m.c.Name(),
 		m.c.Currency(),

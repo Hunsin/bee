@@ -1,3 +1,4 @@
+// Package rt is an adapter between RT-Mart online store and package mart.
 package rt
 
 import "mart"

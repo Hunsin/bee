@@ -1,3 +1,5 @@
+// Package rest is a controller which provides service through
+// RESTful APIs.
 package rest
 
 import (
@@ -26,7 +28,7 @@ func writeError(w http.ResponseWriter, code int, msg string) {
 
 // marts responses with the client a list of marts available
 func marts(w http.ResponseWriter, _ *http.Request) {
-	var ms []mart.MartInfo
+	var ms []mart.Info
 	for _, m := range mart.All() {
 		ms = append(ms, m.Info())
 	}
