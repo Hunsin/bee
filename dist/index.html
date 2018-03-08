@@ -10,7 +10,7 @@
 
   <!-- search form -->
   <form onsubmit="event.preventDefault(); search(this);">
-    <input name="key" type="text" required>
+    <input name="key" type="text" placeholder="搜尋商品" required>
     <input type="submit" value="Search">
     <br>
     <input type="radio" name="order" value="0" checked>By Price
@@ -34,7 +34,7 @@
       100% {opacity: 0.2;}
     }
 
-    form, #board a div {
+    form, #board {
       text-align: center;
     }
 
@@ -70,16 +70,65 @@
       width: 12em;
     }
 
+    #board div {
+      margin-top: 2em;
+    }
+
     #board a:hover {
       box-shadow: 0px 2px 8px #888;
     }
 
-    #board a img {
+    #board a img, #board div {
       width: 100%;
     }
   </style>
 
   <script>
+
+    // render displays data or error message in #board.
+    // If order is true, it sorts the array.
+    function render(arr, order) {
+
+      // hide animation
+      document.getElementById("fading").style.display = "none";
+
+      // display message if error
+      if (arr == undefined && order == undefined) {
+        board.innerHTML = "<div>An error occurred, try again later</div>"
+        return
+      }
+      if (arr == undefined || arr.length == 0) {
+        board.innerHTML = "<div>Oops,... nothing found</div>"
+        return
+      }
+
+      // sort if order by price
+      if (order) arr.sort((a, b) => a.price - b.price);
+
+      // create item thumbnail
+      for (let i = 0; i < arr.length; i++) {
+        let box = document.createElement("a"),
+            img = document.createElement("img"),
+            pro = document.createElement("div"),
+            pce = document.createElement("div"),
+            frm = document.createElement("div");
+      
+        box.href      = arr[i].page;
+        img.src       = arr[i].image;
+        pro.innerText = arr[i].name;
+        pce.innerText = arr[i].price;
+        frm.innerText = arr[i].mart;
+      
+        box.appendChild(img);
+        box.appendChild(pro);
+        box.appendChild(pce);
+        box.appendChild(frm);
+      
+        board.appendChild(box);
+      }
+    }
+
+    // search fetches data from server by given form.
     function search(f) {
 
       // remove old data
@@ -93,39 +142,11 @@
       let data = new FormData(f);
       fetch("/search", {method: "POST", body: data})
       .then(res => res.json())
-      .catch(err => console.log(err))
-      .then(arr => {
-
-        // remove animation
-        document.getElementById("fading").style.display = "none";
-
-        // sort if order by price
-        if (data.get("order") == "0") {
-          arr.sort((a, b) => a.price - b.price);
-        }
-        
-        // create item thumbnail
-        for (let i = 0; i < arr.length; i++) {
-          let box = document.createElement("a"),
-              img = document.createElement("img"),
-              pro = document.createElement("div"),
-              pce = document.createElement("div"),
-              frm = document.createElement("div");
-
-          box.href      = arr[i].page;
-          img.src       = arr[i].image;
-          pro.innerText = arr[i].name;
-          pce.innerText = arr[i].price;
-          frm.innerText = arr[i].mart;
-
-          box.appendChild(img);
-          box.appendChild(pro);
-          box.appendChild(pce);
-          box.appendChild(frm);
-
-          board.appendChild(box);
-        }
-      });
+      .catch(err => {
+        console.log(err);
+        render();
+      })
+      .then(arr => render(arr, data.get("order") == "0"));
     }
   </script>
 </body>
