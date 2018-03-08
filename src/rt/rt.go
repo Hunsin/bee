@@ -21,6 +21,5 @@ func (c *client) Currency() string {
 }
 
 func init() {
-	c := &client{}
-	mart.Register(c.ID(), c)
+	mart.Register(&client{})
 }

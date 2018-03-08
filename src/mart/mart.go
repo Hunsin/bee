@@ -11,7 +11,7 @@ import (
 // Currencies
 const (
 	CurrencyTWD = "TWD"
-	CurrencyUSE = "USD"
+	CurrencyUSD = "USD"
 )
 
 var (
@@ -68,9 +68,9 @@ func (m *Mart) Info() Info {
 	}
 }
 
-// Register makes a client available by the provided name. If c is nil
-// or Register is called twice with the same name, it panics.
-func Register(name string, c Client) {
+// Register makes a client available for use. If c is nil or Register
+// is called twice with the same client ID, it panics.
+func Register(c Client) {
 	pmu.Lock()
 	defer pmu.Unlock()
 
@@ -78,18 +78,18 @@ func Register(name string, c Client) {
 		panic("mart: A nil Client is registered")
 	}
 
-	if _, ok := pool[name]; ok {
-		panic("mart: Multiple Clients registered under name " + name)
+	if _, ok := pool[c.ID()]; ok {
+		panic("mart: Multiple Clients registered under ID " + c.ID())
 	}
 
-	pool[name] = c
+	pool[c.ID()] = c
 }
 
-// Open returns a pointer to Mart with named Client.
-func Open(name string) (*Mart, error) {
-	c, ok := pool[name]
+// Open returns a pointer to Mart with id Client.
+func Open(id string) (*Mart, error) {
+	c, ok := pool[id]
 	if !ok {
-		return nil, errors.New("Client " + name + " not found")
+		return nil, errors.New("Client " + id + " not found")
 	}
 
 	return &Mart{c}, nil
