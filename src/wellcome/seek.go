@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"sort"
 	"strconv"
 )
 
@@ -85,6 +86,14 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 			p.Price, _ = strconv.Atoi(string(pce[1]))
 			ps = append(ps, p)
 		}
+	}
+
+	// it seems Wellcome doesn't sort data completely
+	// we sort it again
+	if by == mart.ByPrice {
+		sort.Slice(ps, func(i, j int) bool {
+			return ps[i].Price-ps[j].Price < 0
+		})
 	}
 
 	return ps, pg, nil

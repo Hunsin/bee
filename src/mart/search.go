@@ -48,7 +48,7 @@ func (q *query) next(fn func()) {
 	}
 }
 
-// seek is the shorthand of q.mart.c.Seek(q.opt.Key, q.opt.Order, page)
+// seek is the shorthand of q.mart.c.Seek(q.opt.Key, page, q.opt.Order)
 func (q *query) seek(page int) ([]Product, int, error) {
 	return q.mart.c.Seek(q.opt.Key, page, q.opt.Order)
 }

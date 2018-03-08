@@ -7,7 +7,7 @@ import (
 
 const (
 	regPage  = "https://online.carrefour.com.tw/[0-9]+"
-	regImage = "https://carrefoureccdn.azureedge.net/content/images/thumbs/.+.jpeg"
+	regImage = "https://carrefoureccdn.azureedge.net/content/images/thumbs/.+.[jpe?g|png]"
 )
 
 func TestSeek(t *testing.T) {

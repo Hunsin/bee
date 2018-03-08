@@ -13,7 +13,7 @@ import (
 const (
 	searchURL = baseURL + "/CarrefourECProduct/GetSearchJson"
 
-	// default numers of item per search
+	// default number of items per search
 	searchSize = 1 << 8
 )
 
@@ -67,6 +67,12 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 
 	var ps []mart.Product
 	for _, s := range out.Content.List {
+
+		// The API may return items not match, filter it
+		if !strings.ContainsAny(s.Name, key) {
+			continue
+		}
+
 		p := mart.Product{
 			Name:  s.Name,
 			Image: s.Image,

@@ -1,7 +1,7 @@
 package mart
 
 import (
-	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -18,30 +18,36 @@ func ValidSeek(rpage, rimg string, c Client) error {
 		return err
 	}
 
-	key := "抽取衛生紙"
-	ps, _, err := c.Seek(key, 1, ByPrice)
-	if err != nil {
-		return err
-	}
-
-	for i := range ps {
-		if !regPage.MatchString(ps[i].Page) {
-			return errors.New("page not match: " + ps[i].Page)
-		}
-		if !regImage.MatchString(ps[i].Image) {
-			return errors.New("image not match: " + ps[i].Image)
-		}
-		if !strings.ContainsAny(ps[i].Name, key) {
-			return errors.New("name not match: " + ps[i].Name)
+	for _, key := range []string{
+		"抽取衛生紙",
+		"蘋果",
+		"牛奶花生",
+		"牛排",
+	} {
+		ps, _, err := c.Seek(key, 1, ByPrice)
+		if err != nil {
+			return err
 		}
 
-		if i == 0 {
-			continue
-		}
+		for i := range ps {
+			if !regPage.MatchString(ps[i].Page) {
+				return fmt.Errorf("page URL not match: %s", ps[i].Page)
+			}
+			if !regImage.MatchString(ps[i].Image) {
+				return fmt.Errorf("image URL not match: %s", ps[i].Image)
+			}
+			if !strings.ContainsAny(ps[i].Name, key) {
+				return fmt.Errorf("search key %s not match: %s", key, ps[i].Name)
+			}
 
-		// check if order by price
-		if ps[i].Price < ps[i-1].Price {
-			return errors.New("not order by price")
+			if i == 0 {
+				continue
+			}
+
+			// check if order by price
+			if ps[i].Price < ps[i-1].Price {
+				return fmt.Errorf("search key %s not order by price", key)
+			}
 		}
 	}
 
