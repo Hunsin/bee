@@ -10,5 +10,6 @@ install: ./build.sh env
 
 script:
   - go test -v carrefour
+  - go test -v mart
   - go test -v rt
   - go test -v wellcome

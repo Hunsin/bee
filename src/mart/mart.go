@@ -85,7 +85,7 @@ func Register(c Client) {
 	pool[c.ID()] = c
 }
 
-// Open returns a pointer to Mart with id Client.
+// Open returns a pointer to Mart with given id.
 func Open(id string) (*Mart, error) {
 	c, ok := pool[id]
 	if !ok {

@@ -55,9 +55,18 @@ func (q *query) seek(page int) ([]Product, int, error) {
 
 // search parses the Products in given page index and sends to q.put.
 // If error occurred, it will send error to q.err.
+// q.Add(1) must be called before calling search.
 func (q *query) search(page int) {
-	q.wg.Add(1)
 	defer q.wg.Done()
+
+	// create a goroutine when first called
+	// once all seek goroutines are finished, run callback
+	if page == 1 && q.opt.Done != nil {
+		go func() {
+			q.wg.Wait()
+			q.next(q.opt.Done)
+		}()
+	}
 
 	// we check the channel at the beginning to avoid making request
 	// after it's cancelled
@@ -70,17 +79,10 @@ func (q *query) search(page int) {
 
 		// if this is the first search, search the rest concurrently
 		if page == 1 {
-			go func() {
-				for i := 2; i <= m; i++ {
-					q.search(i)
-				}
-
-				// once all seek goroutines are finished, run callback
-				q.wg.Wait()
-				if q.opt.Done != nil {
-					q.next(q.opt.Done)
-				}
-			}()
+			for i := 2; i <= m; i++ {
+				q.wg.Add(1)
+				go q.search(i)
+			}
 		}
 
 		q.next(func() { q.put <- p })
@@ -99,5 +101,6 @@ func (m *Mart) Search(ctx context.Context, q Query, cp chan []Product, ce chan e
 		mart: m,
 	}
 
+	qry.wg.Add(1)
 	go qry.search(1)
 }
