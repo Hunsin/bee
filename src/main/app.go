@@ -22,6 +22,7 @@ func main() {
 	// parse flags
 	port := flag.Int("p", 8203, "Port of RESTful server")
 	grpc := flag.Int("g", 8202, "Port of gRPC server")
+	page := flag.String("f", "index.html", "Path to webpage")
 	ver := flag.Bool("v", false, "Print application version and exit")
 	flag.Parse()
 
@@ -39,5 +40,5 @@ func main() {
 
 	// start RESTful server
 	log.Println("RESTful server listen at", *port)
-	log.Fatalln(rest.Serve(*port))
+	log.Fatalln(rest.Serve(*port, *page))
 }

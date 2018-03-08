@@ -27,6 +27,9 @@ Once you build it, the app is under `./dist` directory.
 $ cd ./dist/
 $ ./app -p 8888 -g 8889
 
+# OR, if your working directory is not ./dist/
+$ ./dist/app -f ./dist/index.html
+
 # Example:
 # Read version and exit
 $ ./app -v

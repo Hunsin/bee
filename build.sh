@@ -17,7 +17,7 @@ function env(){
 	# install packages
 	echo "Start installing golang packages..."
 	echo "It take some time, please wait..."
-  go get -u github.com/golang/protobuf/protoc-gen-go
+	go get -u github.com/golang/protobuf/protoc-gen-go
 	go get -u google.golang.org/grpc
 
 	# download gRPC compiler
