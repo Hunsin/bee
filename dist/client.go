@@ -20,9 +20,18 @@ func send(c pb.CrawlerClient) {
 	s := bufio.NewScanner(os.Stdin)
 
 	for s.Scan() {
+
+		// avoid empty input
+		in := s.Text()
+		if len(in) == 0 {
+			fmt.Print("Search: ")
+			continue
+		}
+
+		// get keyword and max
 		var max int
 		var err error
-		args := strings.Fields(s.Text())
+		args := strings.Fields(in)
 		if len(args) > 1 {
 			max, err = strconv.Atoi(args[1])
 			if err != nil {
@@ -34,6 +43,7 @@ func send(c pb.CrawlerClient) {
 			os.Exit(0)
 		}
 
+		// send request
 		r, err := c.Search(context.Background(), &pb.Query{
 			Key: args[0],
 			Num: int64(max),
