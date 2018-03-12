@@ -4,8 +4,6 @@ go:
   - 1.8.x
   - 1.9.x
 
-before_install: export GOPATH=$TRAVIS_BUILD_DIR
-
 install: ./build.sh env
 
 script:
