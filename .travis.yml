@@ -3,8 +3,7 @@ language: go
 go:
   - 1.8.x
   - 1.9.x
-
-install: ./build.sh env
+  - 1.10.x
 
 script:
   - go test -v carrefour
