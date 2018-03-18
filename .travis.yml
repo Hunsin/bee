@@ -6,7 +6,7 @@ go:
   - 1.10.x
 
 script:
-  - go test -v carrefour
-  - go test -v mart
-  - go test -v rt
-  - go test -v wellcome
+  - go test -v github.com/Hunsin/bee/mart
+  - go test -v github.com/Hunsin/bee/mart/carrefour
+  - go test -v github.com/Hunsin/bee/mart/rt
+  - go test -v github.com/Hunsin/bee/mart/wellcome

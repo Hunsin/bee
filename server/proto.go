@@ -3,10 +3,10 @@ package server
 import (
 	"log"
 	"net"
-	"proto/pb"
 	"strconv"
 
 	"github.com/Hunsin/bee/mart"
+	"github.com/Hunsin/bee/server/pb"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"

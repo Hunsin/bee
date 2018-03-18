@@ -30,7 +30,7 @@ func (m *mock) Name() string {
 	return "Mock Client"
 }
 
-// Seek returns with page == 5. When page == 3, it calls m.cancel() 
+// Seek returns with page == 5. When page == 3, it calls m.cancel()
 // if m.status == shouldCancel; or it returns an error if
 // m.status == shouldError.
 func (m *mock) Seek(_ string, page int, odr SearchOrder) ([]Product, int, error) {
