@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"proto/pb"
 	"strconv"
 	"strings"
-
+	
+	"github.com/Hunsin/bee/server/pb"
 	"google.golang.org/grpc"
 )
 

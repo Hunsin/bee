@@ -129,12 +129,9 @@ func search(w http.ResponseWriter, r *http.Request) {
 }
 
 // HTTP creates a RESTful server which listens to given port.
-func HTTP(port int, page string) error {
+func HTTP(port int) error {
 	http.HandleFunc("/marts", marts)
 	http.HandleFunc("/search", search)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, page)
-	})
 
 	return http.ListenAndServe(":"+strconv.Itoa(port), nil)
 }

@@ -15,14 +15,13 @@ import (
 
 // Version is the date of Git commit in the project.
 // Rewrite it by option -ldflags="-X 'main.Version=$GIT_DATE'" in go build.
-var Version = "07Mar2018"
+var Version = "20Mar2018"
 
 func main() {
 
 	// parse flags
 	port := flag.Int("p", 8203, "Port of RESTful server")
 	grpc := flag.Int("g", 8202, "Port of gRPC server")
-	page := flag.String("f", "index.html", "Path to webpage")
 	ver := flag.Bool("v", false, "Print application version and exit")
 	flag.Parse()
 
@@ -40,5 +39,5 @@ func main() {
 
 	// start RESTful server
 	log.Println("RESTful server listen at", *port)
-	log.Fatalln(server.HTTP(*port, *page))
+	log.Fatalln(server.HTTP(*port))
 }
