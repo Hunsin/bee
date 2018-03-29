@@ -71,7 +71,7 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 				Name:  string(b[3]),
 				Image: string(b[2]),
 				Page:  string(b[1]),
-				Mart:  c.ID(),
+				Mart:  id,
 			}
 			p.Price, _ = strconv.Atoi(string(b[4]))
 			ps = append(ps, p)

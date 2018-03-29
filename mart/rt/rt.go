@@ -3,21 +3,23 @@ package rt
 
 import "github.com/Hunsin/bee/mart"
 
-const baseURL = "http://www.rt-mart.com.tw/direct/index.php"
+const (
+	id      = "rt"
+	baseURL = "http://www.rt-mart.com.tw/direct/index.php"
+)
+
+// title is the website's title.
+var title = "大潤發網路購物中心"
 
 // A client implements the mart.Client interface.
 type client struct{}
 
-func (c *client) ID() string {
-	return "rt"
-}
-
-func (c *client) Name() string {
-	return "RT-Mart"
-}
-
-func (c *client) Currency() string {
-	return mart.CurrencyTWD
+func (c *client) Info() mart.Info {
+	return mart.Info{
+		ID:       id,
+		Name:     title,
+		Currency: mart.CurrencyTWD,
+	}
 }
 
 func init() {

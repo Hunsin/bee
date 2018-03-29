@@ -78,7 +78,7 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 			Name:  s.Name,
 			Image: s.Image,
 			Page:  baseURL + strings.Split(s.Page, "?")[0],
-			Mart:  c.ID(),
+			Mart:  id,
 		}
 
 		if s.Special != "" && s.Special != "0" {

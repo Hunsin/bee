@@ -4,21 +4,23 @@ package carrefour
 
 import "github.com/Hunsin/bee/mart"
 
-const baseURL = "https://online.carrefour.com.tw"
+const (
+	id      = "carrefour"
+	baseURL = "https://online.carrefour.com.tw"
+)
+
+// title is the website's title.
+var title = "家樂福線上購物網"
 
 // A client implements the mart.Mart interface.
 type client struct{}
 
-func (c *client) ID() string {
-	return "carrefour"
-}
-
-func (c *client) Name() string {
-	return "Carrefour (TW)"
-}
-
-func (c *client) Currency() string {
-	return mart.CurrencyTWD
+func (c *client) Info() mart.Info {
+	return mart.Info{
+		ID:       id,
+		Name:     title,
+		Currency: mart.CurrencyTWD,
+	}
 }
 
 // init registers a client to package mart.

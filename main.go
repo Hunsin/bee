@@ -15,7 +15,7 @@ import (
 
 // Version is the date of Git commit in the project.
 // Rewrite it by option -ldflags="-X 'main.Version=$GIT_DATE'" in go build.
-var Version = "20Mar2018"
+var Version = "29Mar2018"
 
 func main() {
 

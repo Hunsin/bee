@@ -19,25 +19,6 @@ var (
 	pmu  sync.Mutex
 )
 
-// A Client is an adapter of a specific online store.
-type Client interface {
-
-	// Currency returns the currency the Mart is use.
-	Currency() string
-
-	// ID returns the abbreviation of the Mart.
-	ID() string
-
-	// Name returns the full name of the Mart.
-	Name() string
-
-	// Seek returns the slice of Products which name match given key
-	// in certain number of page. The third argument determines how
-	// products are sorted, either ByPopular or ByPrice. The returned
-	// integer is the number of pages in total.
-	Seek(string, int, SearchOrder) ([]Product, int, error)
-}
-
 // A Product represents an item which is sold on a Mart.
 type Product struct {
 	Name  string `json:"name"`  // Product Name
@@ -61,11 +42,7 @@ type Mart struct {
 
 // Info returns the information of the store.
 func (m *Mart) Info() Info {
-	return Info{
-		m.c.ID(),
-		m.c.Name(),
-		m.c.Currency(),
-	}
+	return m.c.Info()
 }
 
 // Register makes a client available for use. If c is nil or Register
@@ -78,11 +55,12 @@ func Register(c Client) {
 		panic("mart: A nil Client is registered")
 	}
 
-	if _, ok := pool[c.ID()]; ok {
-		panic("mart: Multiple Clients registered under ID " + c.ID())
+	id := c.Info().ID
+	if _, ok := pool[id]; ok {
+		panic("mart: Multiple Clients registered under ID " + id)
 	}
 
-	pool[c.ID()] = c
+	pool[id] = c
 }
 
 // Open returns a pointer to Mart with given id.

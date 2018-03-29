@@ -6,6 +6,19 @@ import (
 	"strings"
 )
 
+// A Client is an adapter of a specific online store.
+type Client interface {
+
+	// Info returns the Mart's information.
+	Info() Info
+
+	// Seek returns the slice of Products which name match given key
+	// in certain number of page. The third argument determines how
+	// products are sorted, either ByPopular or ByPrice. The returned
+	// integer is the number of pages in total.
+	Seek(string, int, SearchOrder) ([]Product, int, error)
+}
+
 // ValidSeek provides an unified way to check if a client works
 // as expected. It is only used for testing.
 func ValidSeek(rpage, rimg string, c Client) error {
@@ -27,6 +40,10 @@ func ValidSeek(rpage, rimg string, c Client) error {
 		ps, _, err := c.Seek(key, 1, ByPrice)
 		if err != nil {
 			return err
+		}
+
+		if len(ps) == 0 {
+			return fmt.Errorf("search %s: no items were returned", key)
 		}
 
 		for i := range ps {
