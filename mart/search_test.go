@@ -18,16 +18,12 @@ type mock struct {
 	cancel func()
 }
 
-func (m *mock) Currency() string {
-	return CurrencyUSD
-}
-
-func (m *mock) ID() string {
-	return "mock"
-}
-
-func (m *mock) Name() string {
-	return "Mock Client"
+func (m *mock) Info() Info {
+	return Info{
+		ID:       "mock",
+		Name:     "Mock",
+		Currency: CurrencyUSD,
+	}
 }
 
 // Seek returns with page == 5. When page == 3, it calls m.cancel()
@@ -54,7 +50,7 @@ func TestSearch(t *testing.T) {
 	ce := make(chan error)
 	mk := &mock{}
 	Register(mk)
-	mt, _ := Open(mk.ID())
+	mt, _ := Open(mk.Info().ID)
 
 	// test error
 	ctx, quit := context.WithTimeout(context.Background(), 3*time.Second)
