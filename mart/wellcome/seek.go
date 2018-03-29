@@ -1,16 +1,16 @@
 package wellcome
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"regexp"
 	"sort"
 	"strconv"
 
+	hp "github.com/Hunsin/bee/htmlparser"
 	"github.com/Hunsin/bee/mart"
+	"golang.org/x/net/html"
 )
 
 const (
@@ -19,21 +19,73 @@ const (
 	// max numer of items per search
 	searchSize = 100
 
-	// product page, image & name
-	tmplInfo = "<a href=\"(.*)\">\n *<img src=\"(.*)\" alt=\"(.*)\" class=\"item-image\">"
-
-	// product price
-	tmplPrice = `<span class="item-price ">([0-9]*)</span>`
-
 	// number of products
-	tmplNum = `<li class="active">關鍵字: .* \(([0-9]*)\)</li>`
+	tmplNum = `.+\(([0-9]*)\)`
 )
 
-var (
-	regInfo  = regexp.MustCompile(tmplInfo)
-	regPrice = regexp.MustCompile(tmplPrice)
-	regNum   = regexp.MustCompile(tmplNum)
-)
+var regNum = regexp.MustCompile(tmplNum)
+
+// count sets the number of items found to c.
+func count(c *int) hp.MatchFunc {
+	return func(n *html.Node) (found bool) {
+		if found = hp.HasText(n, "關鍵字"); found {
+			s := regNum.FindStringSubmatch(n.Data)
+			if len(s) == 2 {
+				*c, _ = strconv.Atoi(s[1])
+			}
+		}
+		return
+	}
+}
+
+// container locates the container of products list and assigns
+// the node to c.
+func container(c *html.Node) hp.MatchFunc {
+	return func(n *html.Node) (found bool) {
+		if found = hp.IsElement(n, "div") &&
+			hp.HasAttr(n, "class", "category-item-container"); found {
+			*c = *n
+		}
+		return
+	}
+}
+
+// image fills p.Image, p.Name and p.Page by parsing attributes of
+// the product's image node.
+func image(p *mart.Product) hp.MatchFunc {
+	return func(n *html.Node) (found bool) {
+		if found = hp.IsElement(n, "img") && hp.HasAttr(n, "class", "item-image"); found {
+			p.Image = baseURL + hp.Attr(n, "src")
+			p.Name = hp.Attr(n, "alt")
+			p.Page = baseURL + hp.Attr(n.Parent, "href")
+		}
+		return
+	}
+}
+
+// price fills p.Price by parsing the price tag.
+func price(p *mart.Product) hp.MatchFunc {
+	return func(n *html.Node) (found bool) {
+		if found = hp.IsElement(n, "span") && hp.HasAttr(n, "class", "item-price "); found {
+			p.Price, _ = hp.Int(n)
+		}
+		return
+	}
+}
+
+// item appends a mart.Product to ps once it found the product item node.
+func item(ps *[]mart.Product) hp.MatchFunc {
+	return func(n *html.Node) (found bool) {
+		if found = hp.IsElement(n, "div") && hp.HasAttr(n, "class", "item"); found {
+			p := mart.Product{Mart: id}
+			hp.Walk(n, price(&p))
+			hp.Walk(n, image(&p))
+
+			*ps = append(*ps, p)
+		}
+		return
+	}
+}
 
 func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product, int, error) {
 	form := url.Values{
@@ -53,41 +105,29 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 	defer r.Body.Close()
 
 	if r.StatusCode != http.StatusOK {
-		return nil, 0, fmt.Errorf("wellcome: Search key %s with status %s returned.", key, r.Status)
+		return nil, 0, fmt.Errorf("wellcome: search key %s with status %s returned", key, r.Status)
 	}
 
-	o, err := ioutil.ReadAll(r.Body)
+	n, err := html.Parse(r.Body)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// extract page number
-	pg := 1
-	n := regNum.FindSubmatch(o)
-	if len(n) == 2 {
-		pg, _ = strconv.Atoi(string(n[1]))
-		pg = (pg + searchSize - 1) / searchSize
+	// extract items number, convert to page number
+	var num int
+	hp.Walk(n, count(&num))
+	if num != 0 {
+		num = (num + searchSize - 1) / searchSize
+	} else {
+		num = 1
 	}
 
-	// devide html into small parts and extract the product info
+	// find products list container
+	hp.Walk(n, container(n))
+
+	// fill the list
 	var ps []mart.Product
-	frags := bytes.Split(o, []byte(`<figure class="item-image-container">`))[1:]
-	for i := range frags {
-		frags[i] = bytes.SplitN(frags[i], []byte(`<div class="ratings-container pull-right ">`), 2)[0]
-
-		inf := regInfo.FindSubmatch(frags[i])
-		pce := regPrice.FindSubmatch(frags[i])
-		if len(inf) == 4 {
-			p := mart.Product{
-				Name:  string(inf[3]),
-				Image: baseURL + string(inf[2]),
-				Page:  baseURL + string(inf[1]),
-				Mart:  c.ID(),
-			}
-			p.Price, _ = strconv.Atoi(string(pce[1]))
-			ps = append(ps, p)
-		}
-	}
+	hp.Walk(n, item(&ps))
 
 	// it seems Wellcome doesn't sort data completely
 	// we sort it again
@@ -97,5 +137,5 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 		})
 	}
 
-	return ps, pg, nil
+	return ps, num, nil
 }
