@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strconv"
 
-	hp "github.com/Hunsin/bee/htmlparser"
+	hu "github.com/Hunsin/go-htmlutil"
 	"github.com/Hunsin/bee/mart"
 	"golang.org/x/net/html"
 )
@@ -26,9 +26,9 @@ const (
 var regNum = regexp.MustCompile(tmplNum)
 
 // count sets the number of items found to c.
-func count(c *int) hp.MatchFunc {
+func count(c *int) hu.MatchFunc {
 	return func(n *html.Node) (found bool) {
-		if found = hp.HasText(n, "關鍵字"); found {
+		if found = hu.HasText(n, "關鍵字"); found {
 			s := regNum.FindStringSubmatch(n.Data)
 			if len(s) == 2 {
 				*c, _ = strconv.Atoi(s[1])
@@ -40,10 +40,10 @@ func count(c *int) hp.MatchFunc {
 
 // container locates the container of products list and assigns
 // the node to c.
-func container(c *html.Node) hp.MatchFunc {
+func container(c *html.Node) hu.MatchFunc {
 	return func(n *html.Node) (found bool) {
-		if found = hp.IsElement(n, "div") &&
-			hp.HasAttr(n, "class", "category-item-container"); found {
+		if found = hu.IsElement(n, "div") &&
+			hu.HasAttr(n, "class", "category-item-container"); found {
 			*c = *n
 		}
 		return
@@ -52,34 +52,34 @@ func container(c *html.Node) hp.MatchFunc {
 
 // image fills p.Image, p.Name and p.Page by parsing attributes of
 // the product's image node.
-func image(p *mart.Product) hp.MatchFunc {
+func image(p *mart.Product) hu.MatchFunc {
 	return func(n *html.Node) (found bool) {
-		if found = hp.IsElement(n, "img") && hp.HasAttr(n, "class", "item-image"); found {
-			p.Image = baseURL + hp.Attr(n, "src")
-			p.Name = hp.Attr(n, "alt")
-			p.Page = baseURL + hp.Attr(n.Parent, "href")
+		if found = hu.IsElement(n, "img") && hu.HasAttr(n, "class", "item-image"); found {
+			p.Image = baseURL + hu.Attr(n, "src")
+			p.Name = hu.Attr(n, "alt")
+			p.Page = baseURL + hu.Attr(n.Parent, "href")
 		}
 		return
 	}
 }
 
 // price fills p.Price by parsing the price tag.
-func price(p *mart.Product) hp.MatchFunc {
+func price(p *mart.Product) hu.MatchFunc {
 	return func(n *html.Node) (found bool) {
-		if found = hp.IsElement(n, "span") && hp.HasAttr(n, "class", "item-price "); found {
-			p.Price, _ = hp.Int(n)
+		if found = hu.IsElement(n, "span") && hu.HasAttr(n, "class", "item-price "); found {
+			p.Price, _ = hu.Int(n)
 		}
 		return
 	}
 }
 
 // item appends a mart.Product to ps once it found the product item node.
-func item(ps *[]mart.Product) hp.MatchFunc {
+func item(ps *[]mart.Product) hu.MatchFunc {
 	return func(n *html.Node) (found bool) {
-		if found = hp.IsElement(n, "div") && hp.HasAttr(n, "class", "item"); found {
+		if found = hu.IsElement(n, "div") && hu.HasAttr(n, "class", "item"); found {
 			p := mart.Product{Mart: id}
-			hp.Walk(n, price(&p))
-			hp.Walk(n, image(&p))
+			hu.Walk(n, price(&p))
+			hu.Walk(n, image(&p))
 
 			*ps = append(*ps, p)
 		}
@@ -115,7 +115,7 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 
 	// extract items number, convert to page number
 	var num int
-	hp.Walk(n, count(&num))
+	hu.Walk(n, count(&num))
 	if num != 0 {
 		num = (num + searchSize - 1) / searchSize
 	} else {
@@ -123,11 +123,11 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 	}
 
 	// find products list container
-	hp.Walk(n, container(n))
+	hu.Walk(n, container(n))
 
 	// fill the list
 	var ps []mart.Product
-	hp.Walk(n, item(&ps))
+	hu.Walk(n, item(&ps))
 
 	// it seems Wellcome doesn't sort data completely
 	// we sort it again
