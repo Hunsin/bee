@@ -8,8 +8,8 @@ import (
 	"sort"
 	"strconv"
 
-	hu "github.com/Hunsin/go-htmlutil"
 	"github.com/Hunsin/bee/mart"
+	hu "github.com/Hunsin/go-htmlutil"
 	"golang.org/x/net/html"
 )
 
@@ -25,66 +25,73 @@ const (
 
 var regNum = regexp.MustCompile(tmplNum)
 
-// count sets the number of items found to c.
-func count(c *int) hu.MatchFunc {
-	return func(n *html.Node) (found bool) {
+// count returns the number of items found.
+func count(doc *html.Node) (c int) {
+	hu.First(doc, func(n *html.Node) (found bool) {
 		if found = hu.HasText(n, "關鍵字"); found {
 			s := regNum.FindStringSubmatch(n.Data)
 			if len(s) == 2 {
-				*c, _ = strconv.Atoi(s[1])
+				c, _ = strconv.Atoi(s[1])
 			}
 		}
 		return
-	}
+	})
+	return
 }
 
-// container locates the container of products list and assigns
-// the node to c.
-func container(c *html.Node) hu.MatchFunc {
-	return func(n *html.Node) (found bool) {
+// container returns the pointer to the node of products container,
+// which the element is "div.category-item-container"
+func container(doc *html.Node) (c *html.Node) {
+	hu.First(doc, func(n *html.Node) (found bool) {
 		if found = hu.IsElement(n, "div") &&
 			hu.HasAttr(n, "class", "category-item-container"); found {
-			*c = *n
+			c = n
 		}
 		return
-	}
+	})
+	return
 }
 
-// image fills p.Image, p.Name and p.Page by parsing attributes of
-// the product's image node.
-func image(p *mart.Product) hu.MatchFunc {
-	return func(n *html.Node) (found bool) {
+// image returns the product name, image and page URL from
+// "img.item-image" element. The p.Mart is set to id.
+func image(doc *html.Node) (p *mart.Product) {
+	hu.First(doc, func(n *html.Node) (found bool) {
 		if found = hu.IsElement(n, "img") && hu.HasAttr(n, "class", "item-image"); found {
-			p.Image = baseURL + hu.Attr(n, "src")
-			p.Name = hu.Attr(n, "alt")
-			p.Page = baseURL + hu.Attr(n.Parent, "href")
+			p = &mart.Product{
+				Image: baseURL + hu.Attr(n, "src"),
+				Name:  hu.Attr(n, "alt"),
+				Page:  baseURL + hu.Attr(n.Parent, "href"),
+				Mart:  id,
+			}
 		}
 		return
-	}
+	})
+	return
 }
 
-// price fills p.Price by parsing the price tag.
-func price(p *mart.Product) hu.MatchFunc {
-	return func(n *html.Node) (found bool) {
+// price returns the product price.
+func price(doc *html.Node) (p int) {
+	hu.First(doc, func(n *html.Node) (found bool) {
 		if found = hu.IsElement(n, "span") && hu.HasAttr(n, "class", "item-price "); found {
-			p.Price, _ = hu.Int(n)
+			p, _ = hu.Int(n)
 		}
 		return
-	}
+	})
+	return
 }
 
-// item appends a mart.Product to ps once it found the product item node.
-func item(ps *[]mart.Product) hu.MatchFunc {
-	return func(n *html.Node) (found bool) {
+// list returns the slice of products extracted from the page.
+func list(doc *html.Node) (ps []mart.Product) {
+	hu.Walk(doc, func(n *html.Node) (found bool) {
 		if found = hu.IsElement(n, "div") && hu.HasAttr(n, "class", "item"); found {
-			p := mart.Product{Mart: id}
-			hu.Walk(n, price(&p))
-			hu.Walk(n, image(&p))
-
-			*ps = append(*ps, p)
+			if p := image(n); p != nil {
+				p.Price = price(n)
+				ps = append(ps, *p)
+			}
 		}
 		return
-	}
+	})
+	return
 }
 
 func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product, int, error) {
@@ -113,21 +120,22 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 		return nil, 0, err
 	}
 
-	// extract items number, convert to page number
-	var num int
-	hu.Walk(n, count(&num))
-	if num != 0 {
-		num = (num + searchSize - 1) / searchSize
-	} else {
-		num = 1
-	}
+	// assign pointer to <body></body> element
+	hu.First(n, func(c *html.Node) (found bool) {
+		if found = hu.IsElement(c, "body"); found {
+			*n = *c
+		}
+		return
+	})
+
+	// extract number of items
+	num := count(n)
 
 	// find products list container
-	hu.Walk(n, container(n))
+	n = container(n)
 
 	// fill the list
-	var ps []mart.Product
-	hu.Walk(n, item(&ps))
+	ps := list(n)
 
 	// it seems Wellcome doesn't sort data completely
 	// we sort it again
@@ -137,5 +145,5 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 		})
 	}
 
-	return ps, num, nil
+	return ps, (num + searchSize - 1) / searchSize, nil
 }

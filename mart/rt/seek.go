@@ -42,8 +42,8 @@ func container(doc *html.Node) (c *html.Node) {
 
 // image extracts the product name, image and page URL from
 // "div.for_imgbox" element. The p.Price is 0.
-func image(n *html.Node) (p *mart.Product) {
-	hu.First(n, func(n *html.Node) (found bool) {
+func image(doc *html.Node) (p *mart.Product) {
+	hu.First(doc, func(n *html.Node) (found bool) {
 		if found = hu.IsElement(n, "img"); found {
 			p = &mart.Product{
 				Image: hu.Attr(n, "src"),
@@ -58,8 +58,8 @@ func image(n *html.Node) (p *mart.Product) {
 }
 
 // price returns the product price.
-func price(n *html.Node) (p int) {
-	hu.First(n, func(n *html.Node) (found bool) {
+func price(doc *html.Node) (p int) {
+	hu.First(doc, func(n *html.Node) (found bool) {
 		if found = hu.HasAttr(n, "class", "for_pricebox"); found {
 			p, _ = hu.Int(n)
 		}
