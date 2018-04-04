@@ -1,31 +1,86 @@
 package rt
 
 import (
-	"bytes"
-	"io/ioutil"
+	"fmt"
 	"net/http"
 	"net/url"
-	"regexp"
 	"sort"
 	"strconv"
 
 	"github.com/Hunsin/bee/mart"
+	hu "github.com/Hunsin/go-htmlutil"
+	"golang.org/x/net/html"
 )
 
-const (
-	tmplPro = `<a href="(.+)" target="_blank"><img src="(.+)" width="[0-9]+" (?:[a-z]+=".+" )+alt="(.+)" ?/>.+<div class="for_pricebox"><div ?><span>\$</span>([0-9]+)</div>`
-)
+var numSeek = 1 << 6
 
-var (
+// count returns the number of items found.
+// The number is extracted from "span.t02" element.
+func count(doc *html.Node) (c int) {
+	hu.First(doc, func(n *html.Node) (found bool) {
+		if found = hu.IsElement(n, "span") && hu.HasAttr(n, "class", "t02"); found {
+			var err error
+			if c, err = hu.Int(n); err != nil {
+				c = 1
+			}
+		}
+		return
+	})
+	return
+}
 
-	// regPro parses the product information
-	regPro = regexp.MustCompile(tmplPro)
+// container returns the pointer to the node of products list.
+func container(doc *html.Node) (c *html.Node) {
+	hu.First(doc, func(n *html.Node) (found bool) {
+		if found = hu.HasAttr(n, "class", "classify_prolistBox"); found {
+			c = n
+		}
+		return
+	})
+	return
+}
 
-	// regNum parses the number of products
-	regNum = regexp.MustCompile(`<span class="t02">([0-9]*)</span>`)
+// image extracts the product name, image and page URL from
+// "div.for_imgbox" element. The p.Price is 0.
+func image(n *html.Node) (p *mart.Product) {
+	hu.First(n, func(n *html.Node) (found bool) {
+		if found = hu.IsElement(n, "img"); found {
+			p = &mart.Product{
+				Image: hu.Attr(n, "src"),
+				Name:  hu.Attr(n, "title"),
+				Page:  hu.Attr(n.Parent, "href"),
+				Mart:  id,
+			}
+		}
+		return
+	})
+	return
+}
 
-	numSeek = 1 << 6
-)
+// price returns the product price.
+func price(n *html.Node) (p int) {
+	hu.First(n, func(n *html.Node) (found bool) {
+		if found = hu.HasAttr(n, "class", "for_pricebox"); found {
+			p, _ = hu.Int(n)
+		}
+		return
+	})
+	return
+}
+
+// list returns the slice of products extracted from the page.
+func list(doc *html.Node) (ps []mart.Product) {
+	hu.Walk(doc, func(n *html.Node) (found bool) {
+		if found = hu.HasAttr(n, "class", "indexProList"); found {
+			if p := image(n); p != nil {
+				p.Price = price(n)
+				ps = append(ps, *p)
+			}
+		}
+		return
+	})
+	return
+}
 
 func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product, int, error) {
 	form := url.Values{
@@ -45,38 +100,30 @@ func (c *client) Seek(key string, page int, by mart.SearchOrder) ([]mart.Product
 	}
 	defer r.Body.Close()
 
-	o, err := ioutil.ReadAll(r.Body)
+	if r.StatusCode != http.StatusOK {
+		return nil, 0, fmt.Errorf("rt: search key %s with status %s returned", key, r.Status)
+	}
+
+	n, err := html.Parse(r.Body)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// extract number of products
-	var num int
-	b := regNum.FindSubmatch(o)
-	if len(b) == 2 {
-		num, _ = strconv.Atoi(string(b[1]))
-	}
-
-	var ps []mart.Product
-
-	// devide the document into small fragments and remove "\n"
-	// than extract the products
-	frags := bytes.Split(o, []byte(`<div class="indexProList">`))[1:]
-	for i := range frags {
-		frags[i] = bytes.Replace(frags[i], []byte("\n"), []byte{}, -1)
-
-		b = regPro.FindSubmatch(frags[i])
-		if len(b) == 5 {
-			p := mart.Product{
-				Name:  string(b[3]),
-				Image: string(b[2]),
-				Page:  string(b[1]),
-				Mart:  id,
-			}
-			p.Price, _ = strconv.Atoi(string(b[4]))
-			ps = append(ps, p)
+	// assign pointer to <body></body> element
+	hu.First(n, func(c *html.Node) (found bool) {
+		if found = hu.IsElement(c, "body"); found {
+			*n = *c
 		}
-	}
+		return
+	})
+
+	// extract number of products
+	num := count(n)
+
+	// get product list node
+	n = container(n)
+
+	ps := list(n)
 
 	// it seems RT-Mart doesn't sort data completely
 	// we sort it again
