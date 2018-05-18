@@ -5,8 +5,8 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/Hunsin/bee/api"
 	"github.com/Hunsin/bee/mart"
-	"github.com/Hunsin/bee/server/pb"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -24,11 +24,11 @@ func noFound(msg string) error {
 	return status.Error(codes.NotFound, msg)
 }
 
-// A gRPCsrv implements the pb.CrawlerServer interface.
+// A gRPCsrv implements the api.CrawlerServer interface.
 type gRPCsrv struct{}
 
 // Search streams the products which match q to client.
-func (s *gRPCsrv) Search(q *pb.Query, stream pb.Crawler_SearchServer) error {
+func (s *gRPCsrv) Search(q *api.Query, stream api.Crawler_SearchServer) error {
 	if q.Key == "" {
 		return badRequest("Key must not be empty")
 	}
@@ -40,7 +40,7 @@ func (s *gRPCsrv) Search(q *pb.Query, stream pb.Crawler_SearchServer) error {
 		Order: mart.ByPrice,
 		Done:  func() { d <- true },
 	}
-	if q.Order == pb.Query_POPULAR {
+	if q.Order == api.Query_POPULAR {
 		opt.Order = mart.ByPopular
 	}
 
@@ -84,7 +84,7 @@ func (s *gRPCsrv) Search(q *pb.Query, stream pb.Crawler_SearchServer) error {
 					return nil
 				}
 
-				if err := stream.Send(&pb.Product{
+				if err := stream.Send(&api.Product{
 					Name:  ps[i].Name,
 					Image: ps[i].Image,
 					Page:  ps[i].Page,
@@ -107,21 +107,22 @@ func (s *gRPCsrv) Search(q *pb.Query, stream pb.Crawler_SearchServer) error {
 }
 
 // Marts responses with the client a list of marts available.
-func (s *gRPCsrv) Marts(_ context.Context, _ *pb.Null) (*pb.MartList, error) {
-	l := &pb.MartList{}
-	for _, m := range mart.All() {
+func (s *gRPCsrv) Marts(_ *api.Null, stream api.Crawler_MartsServer) error {
+	all := mart.All()
+	if len(all) == 0 {
+		return noFound("No mart available")
+	}
+
+	for _, m := range all {
 		info := m.Info()
-		l.Marts = append(l.Marts, &pb.Mart{
+		stream.Send(&api.Mart{
 			Id:   info.ID,
 			Name: info.Name,
 			Cur:  info.Currency,
 		})
 	}
 
-	if len(l.Marts) == 0 {
-		return nil, noFound("No mart available")
-	}
-	return l, nil
+	return nil
 }
 
 // GRPC creates a gRPC server which listens to given port.
@@ -132,7 +133,7 @@ func GRPC(port int) error {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterCrawlerServer(s, &gRPCsrv{})
+	api.RegisterCrawlerServer(s, &gRPCsrv{})
 
 	return s.Serve(l)
 }

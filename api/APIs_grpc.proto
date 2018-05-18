@@ -1,16 +1,16 @@
 syntax = "proto3";
 
-package pb;
+package api;
 
 service Crawler {
 
 	// Search returns the Products which match given Query.
 	// The service DOES NOT GUARANTEE the order of Products since
 	// they may come from various mart.
-	rpc Search (Query) returns (stream Product) {};
+	rpc Search (Query) returns (stream Product);
 
 	// Marts returns a list of marts are available in the service.
-	rpc Marts (Null) returns (MartList);
+	rpc Marts (Null) returns (stream Mart);
 }
 
 // An Null is used if no argument is needed when making a request.
@@ -21,11 +21,7 @@ message Mart {
 	string id   = 1;
 	string name = 2;
 	string cur  = 3; // abbr. of currency
-}
-
-// A MartList contains an array of mart names.
-message MartList {
-	repeated Mart marts = 1;
+	string url  = 4; // URL of the website
 }
 
 // An Query specifies the keyword, number of products are needed
@@ -33,22 +29,22 @@ message MartList {
 // null, the service will return products from all marts available.
 // If num <= 0, there is no limit of numbers.
 message Query {
-	string key  = 1;
+	string key  = 1; // search keyword
 	string mart = 2; // id of the mart
-	int64  num  = 3;
+	int64  num  = 3; // request number
 	
 	enum Order {
 		PRICE   = 0;
 		POPULAR = 1;
 	}
-	Order order = 4;
+	Order order = 4; // order by price ascending or popularity descending
 }
 
 // A Product specifies the information of a product.
 message Product {
-	string name  = 1;
-	string image = 2;
-	string page  = 3;
-	int64  price = 4;
+	string name  = 1; // Product Name 
+	string image = 2; // URL of the Product Image
+	string page  = 3; // URL of the Product page
+	int64  price = 4; // you know, just price
 	string mart  = 5; // id of the mart
 }
