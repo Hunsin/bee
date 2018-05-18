@@ -3,7 +3,7 @@ package rt
 import (
 	"testing"
 
-	"github.com/Hunsin/bee/mart"
+	"github.com/Hunsin/bee/mart/marttest"
 )
 
 const (
@@ -12,7 +12,7 @@ const (
 )
 
 func TestSeek(t *testing.T) {
-	err := mart.ValidSeek(regPage, regImage, &client{})
+	err := marttest.ValidSeek(regPage, regImage, &client{})
 	if err != nil {
 		t.Error("client.Seek failed:", err)
 	}
